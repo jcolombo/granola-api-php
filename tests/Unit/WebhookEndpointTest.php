@@ -30,7 +30,7 @@ final class WebhookEndpointTest extends GranolaTestCase
         ], $api->bodyAt(0));
 
         self::assertSame('whe_2mKr8fQxLp7Ta3', $endpoint->id());
-        self::assertSame('whsec_c2VjcmV0LWtleS1mb3ItZ3Jhbm9sYS10ZXN0cw==', $endpoint->signingSecret());
+        self::assertSame('whsec_EXAMPLE.not.a.real.secret', $endpoint->signingSecret());
     }
 
     public function testEventsAndFolderIdsAreOnlySentWhenGiven(): void

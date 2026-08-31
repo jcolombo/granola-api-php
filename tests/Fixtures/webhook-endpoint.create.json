@@ -9,5 +9,5 @@
     "created_by": { "name": "Oat Benson", "email": "oat@granola.ai" },
     "enabled": true,
     "created_at": "2026-01-27T15:30:00Z",
-    "signing_secret": "whsec_c2VjcmV0LWtleS1mb3ItZ3Jhbm9sYS10ZXN0cw=="
+    "signing_secret": "whsec_EXAMPLE.not.a.real.secret"
 }

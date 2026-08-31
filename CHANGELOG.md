@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Changed
 
 - `fetchAll()` and `each()` are documented as the complete-content calls: whichever way a transcript arrived — inline, paged, or after a `413` fallback — one call returns all of it, with no branching by the caller. Removed the `hasInlineTranscript()` ternary from the integration guide and examples.
+- Test signing secrets are now assembled at runtime rather than written as literals. Standard Webhooks borrowed Stripe's `whsec_` prefix, so a literal `whsec_<base64>` in source trips GitHub secret scanning as a "Stripe Webhook Signing Secret" — a false positive that fired a real alert on this repository and would fire again on every fork. No credential was ever exposed: the flagged value decoded to the ASCII string `secret-key-for-granola-tests`. Test coverage is unchanged, including the prefix-stripping path.
 
 ## [0.1.0] - 2026-08-31
 

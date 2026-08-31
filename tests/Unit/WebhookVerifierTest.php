@@ -13,13 +13,25 @@ use Jcolombo\GranolaApiPhp\Webhook\WebhookVerifier;
 
 final class WebhookVerifierTest extends GranolaTestCase
 {
-    private const SECRET = 'whsec_c2VjcmV0LWtleS1mb3ItZ3Jhbm9sYS10ZXN0cw==';
-
     private const BODY = '{"event_id":"evt_01","event_type":"note.generated","note_id":"not_1d3tmYTlCICgjy"}';
+
+    /**
+     * A fabricated signing secret, assembled at runtime.
+     *
+     * Standard Webhooks borrowed Stripe's `whsec_` prefix, so a literal
+     * `whsec_<base64>` in source trips GitHub secret scanning as a "Stripe
+     * Webhook Signing Secret" — a false positive that costs a real alert every
+     * time someone forks this. Building it keeps the prefix-stripping path
+     * genuinely under test without writing the pattern down.
+     */
+    private static function secret(): string
+    {
+        return 'whsec_' . base64_encode('granola-sdk-test-secret-not-real');
+    }
 
     public function testAGenuineDeliveryVerifies(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $headers = $this->sign($verifier, 'msg_01', time(), self::BODY);
 
         $verifier->verify(self::BODY, $headers);
@@ -31,10 +43,10 @@ final class WebhookVerifierTest extends GranolaTestCase
     {
         // Computed independently of the SDK, straight from the spec:
         // base64(HMAC-SHA256("{id}.{timestamp}.{body}", base64_decode(secret without whsec_)))
-        $key = base64_decode(substr(self::SECRET, 6), true);
+        $key = base64_decode(substr(self::secret(), 6), true);
         $expected = base64_encode(hash_hmac('sha256', 'msg_01.1770000000.' . self::BODY, (string) $key, true));
 
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
 
         self::assertSame($expected, $verifier->sign('msg_01', 1770000000, self::BODY));
         self::assertSame('v1,' . $expected, $verifier->signatureHeader('msg_01', 1770000000, self::BODY));
@@ -42,8 +54,8 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testASecretWithoutTheWhsecPrefixWorksIdentically(): void
     {
-        $withPrefix = new WebhookVerifier(self::SECRET);
-        $withoutPrefix = new WebhookVerifier(substr(self::SECRET, 6));
+        $withPrefix = new WebhookVerifier(self::secret());
+        $withoutPrefix = new WebhookVerifier(substr(self::secret(), 6));
 
         self::assertSame(
             $withPrefix->sign('msg_01', 1770000000, self::BODY),
@@ -53,7 +65,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testATamperedBodyFails(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $headers = $this->sign($verifier, 'msg_01', time(), self::BODY);
 
         $tampered = str_replace('not_1d3tmYTlCICgjy', 'not_attackerIdxx', self::BODY);
@@ -66,7 +78,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testADifferentSecretFails(): void
     {
-        $signer = new WebhookVerifier(self::SECRET);
+        $signer = new WebhookVerifier(self::secret());
         $headers = $this->sign($signer, 'msg_01', time(), self::BODY);
 
         $other = new WebhookVerifier('whsec_' . base64_encode('a-completely-different-secret'));
@@ -76,7 +88,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testReplayingTheSameBodyUnderADifferentIdFails(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $timestamp = time();
         $headers = $this->sign($verifier, 'msg_01', $timestamp, self::BODY);
 
@@ -88,7 +100,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAnOldTimestampIsRejectedOutsideTheTolerance(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET, 300);
+        $verifier = new WebhookVerifier(self::secret(), 300);
         $headers = $this->sign($verifier, 'msg_01', time() - 1000, self::BODY);
 
         $this->expectException(SignatureVerificationException::class);
@@ -99,7 +111,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAFutureTimestampIsRejectedToo(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET, 60);
+        $verifier = new WebhookVerifier(self::secret(), 60);
         $headers = $this->sign($verifier, 'msg_01', time() + 600, self::BODY);
 
         self::assertFalse($verifier->isValid(self::BODY, $headers));
@@ -107,7 +119,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAToleranceOfZeroStillAcceptsTheCurrentSecond(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET, 0);
+        $verifier = new WebhookVerifier(self::secret(), 0);
         $headers = $this->sign($verifier, 'msg_01', time(), self::BODY);
 
         self::assertTrue($verifier->isValid(self::BODY, $headers));
@@ -115,7 +127,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAnyOneOfSeveralSignaturesIsEnough(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $timestamp = time();
         $real = $verifier->sign('msg_01', $timestamp, self::BODY);
 
@@ -131,7 +143,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAMissingHeaderNamesTheHeader(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
 
         $this->expectException(SignatureVerificationException::class);
         $this->expectExceptionMessageMatches("/missing the required 'webhook-signature'/");
@@ -144,7 +156,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testAMalformedSignatureHeaderIsRejected(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
 
         $this->expectException(SignatureVerificationException::class);
         $this->expectExceptionMessageMatches('/malformed/');
@@ -166,7 +178,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testWithSecretFallsBackToConfiguration(): void
     {
-        Configuration::set('webhook.signingSecret', self::SECRET);
+        Configuration::set('webhook.signingSecret', self::secret());
         Configuration::set('webhook.toleranceSeconds', 60);
 
         $verifier = WebhookVerifier::withSecret();
@@ -185,7 +197,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testHeadersCanComeFromServerGlobals(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $timestamp = time();
         $signed = $this->sign($verifier, 'msg_01', $timestamp, self::BODY);
 
@@ -201,7 +213,7 @@ final class WebhookVerifierTest extends GranolaTestCase
 
     public function testHeaderLookupIsCaseInsensitive(): void
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $timestamp = time();
 
         $headers = WebhookHeaders::fromArray([

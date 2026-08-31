@@ -15,12 +15,19 @@ use Jcolombo\GranolaApiPhp\Webhook\WebhookVerifier;
 
 final class WebhookParseTest extends GranolaTestCase
 {
-    private const SECRET = 'whsec_c2VjcmV0LWtleS1mb3ItZ3Jhbm9sYS10ZXN0cw==';
+    /**
+     * A fabricated signing secret, assembled at runtime so that a literal
+     * `whsec_<base64>` never appears in source — see WebhookVerifierTest.
+     */
+    private static function secret(): string
+    {
+        return 'whsec_' . base64_encode('granola-sdk-test-secret-not-real');
+    }
 
     public function testAVerifiedDeliveryBecomesATypedEvent(): void
     {
         $body = $this->payload('note.generated');
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
 
         self::assertSame('evt_01HXYZ', $event->eventId);
         self::assertSame(WebhookEventType::NoteGenerated, $event->type);
@@ -34,7 +41,7 @@ final class WebhookParseTest extends GranolaTestCase
     public function testAnEditedEventExposesItsChangedFields(): void
     {
         $body = $this->payload('note.edited', ['data' => ['changed_fields' => ['summary']]]);
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
 
         self::assertTrue($event->isEdited());
         self::assertSame(['summary'], $event->changedFields);
@@ -46,7 +53,7 @@ final class WebhookParseTest extends GranolaTestCase
     {
         // Granola adds events over time; a receiver must survive the next one.
         $body = $this->payload('note.archived');
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
 
         self::assertNull($event->type);
         self::assertSame('note.archived', $event->rawType);
@@ -63,7 +70,7 @@ final class WebhookParseTest extends GranolaTestCase
 
         $this->expectException(SignatureVerificationException::class);
 
-        Webhook::parse($tampered, $headers, self::SECRET);
+        Webhook::parse($tampered, $headers, self::secret());
     }
 
     public function testMalformedJsonIsReportedClearly(): void
@@ -73,7 +80,7 @@ final class WebhookParseTest extends GranolaTestCase
         $this->expectException(WebhookPayloadException::class);
         $this->expectExceptionMessageMatches('/not valid JSON/');
 
-        Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        Webhook::parse($body, $this->headersFor($body), self::secret());
     }
 
     public function testAMissingRequiredFieldNamesTheField(): void
@@ -83,7 +90,7 @@ final class WebhookParseTest extends GranolaTestCase
         $this->expectException(WebhookPayloadException::class);
         $this->expectExceptionMessageMatches("/missing the required 'note_id'/");
 
-        Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        Webhook::parse($body, $this->headersFor($body), self::secret());
     }
 
     public function testTheNoteIsNotFetchedUntilAHandlerAsksForIt(): void
@@ -91,7 +98,7 @@ final class WebhookParseTest extends GranolaTestCase
         $api = MockApi::make(MockApi::fixture('note.get'));
         $body = $this->payload('note.generated');
 
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET, $api->granola);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret(), $api->granola);
 
         self::assertSame(0, $api->requestCount(), 'parsing alone must not call the API');
 
@@ -105,7 +112,7 @@ final class WebhookParseTest extends GranolaTestCase
     {
         $api = MockApi::make(MockApi::fixture('note.get'));
         $body = $this->payload('note.generated');
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET, $api->granola);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret(), $api->granola);
 
         $event->note();
         $event->note();
@@ -121,7 +128,7 @@ final class WebhookParseTest extends GranolaTestCase
             MockApi::fixture('note.get.with-transcript'),
         );
         $body = $this->payload('note.generated');
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET, $api->granola);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret(), $api->granola);
 
         $event->note();
         $withTranscript = $event->note(true);
@@ -134,7 +141,7 @@ final class WebhookParseTest extends GranolaTestCase
     public function testAnEventWithoutAConnectionSaysSoInsteadOfFailingObscurely(): void
     {
         $body = $this->payload('note.generated');
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
 
         self::assertFalse($event->hasConnection());
         $this->expectException(WebhookPayloadException::class);
@@ -148,7 +155,7 @@ final class WebhookParseTest extends GranolaTestCase
         $api = MockApi::make(MockApi::fixture('note.get'));
         $body = $this->payload('note.generated');
 
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
         $connected = $event->withConnection($api->granola);
 
         self::assertFalse($event->hasConnection(), 'the original event is untouched');
@@ -168,14 +175,14 @@ final class WebhookParseTest extends GranolaTestCase
     {
         $body = $this->payload('note.generated');
 
-        self::assertTrue(Webhook::isValid($body, $this->headersFor($body), self::SECRET));
-        self::assertFalse(Webhook::isValid($body . ' ', $this->headersFor($body), self::SECRET));
+        self::assertTrue(Webhook::isValid($body, $this->headersFor($body), self::secret()));
+        self::assertFalse(Webhook::isValid($body . ' ', $this->headersFor($body), self::secret()));
     }
 
     public function testTheOriginalPayloadSurvivesForStorageAndReplay(): void
     {
         $body = $this->payload('note.edited', ['data' => ['changed_fields' => ['summary']]]);
-        $event = Webhook::parse($body, $this->headersFor($body), self::SECRET);
+        $event = Webhook::parse($body, $this->headersFor($body), self::secret());
 
         $stored = (string) json_encode($event);
         $replayed = Webhook::parseUnverified($stored);
@@ -204,7 +211,7 @@ final class WebhookParseTest extends GranolaTestCase
      */
     private function headersFor(string $body, string $id = 'evt_01HXYZ'): array
     {
-        $verifier = new WebhookVerifier(self::SECRET);
+        $verifier = new WebhookVerifier(self::secret());
         $timestamp = time();
 
         return [

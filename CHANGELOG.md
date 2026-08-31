@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Fixed
+
+- `fetchAll()` no longer discards loaded content and re-requests it. It now returns immediately when the collection is already complete, and resumes from where a previous `fetch()` stopped instead of starting over. This mattered most for transcripts: `$note->transcript()->fetchAll()` on a transcript that arrived inline was throwing the seeded content away and paging it back from the API, defeating the point of `include=transcript`. `fetchAll()` is now idempotent.
+- `each()` no longer skips the first page when called on a collection that had `fetch()` called on it — it resumed from the *next* cursor, silently dropping the loaded page. It now yields already-loaded items before paging on, and makes no request for a transcript that arrived inline. A cursor set with `withCursor()` on a fresh collection is still honoured.
+
+### Changed
+
+- `fetchAll()` and `each()` are documented as the complete-content calls: whichever way a transcript arrived — inline, paged, or after a `413` fallback — one call returns all of it, with no branching by the caller. Removed the `hasInlineTranscript()` ternary from the integration guide and examples.
+
 ## [0.1.0] - 2026-08-31
 
 Initial release. Covers every endpoint documented in Granola's public API.

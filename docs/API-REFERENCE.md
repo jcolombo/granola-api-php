@@ -68,7 +68,7 @@ Every public class, method and property in the SDK.
 | `transcript()` | `TranscriptCollection` | Pre-seeded when the transcript was inlined. |
 | `hasInlineTranscript()` | `bool` | |
 | `transcriptWasTooLarge()` | `bool` | Granola answered 413. |
-| `transcriptText(bool $withSpeakers = true, string $separator = "\n")` | `string` | Inline transcript only. |
+| `transcriptText(bool $withSpeakers = true, string $separator = "\n")` | `string` | **Inline transcript only.** For the complete text regardless of how it arrived, use `transcript()->fetchAll()->toText()`. |
 | `summary()` | `?string` | Markdown when present, else plain text. |
 | `attendeeEmails()` | `list<string>` | |
 | `folders()` | `list<Folder>` | |
@@ -419,10 +419,10 @@ Every collection extends `AbstractCollection` and implements `Iterator`, `ArrayA
 
 | Method | Returns | Notes |
 |--------|---------|-------|
-| `fetch()` | `static` | One page, replacing what is loaded. |
+| `fetch()` | `static` | One page, replacing what is loaded. Always requests. |
 | `fetchNext()` | `static` | Append the next page. |
-| `fetchAll()` | `static` | Every page, all resident. |
-| `each()` | `Generator` | Every item, one page resident. |
+| `fetchAll()` | `static` | Complete the set, stitched together, all resident. Resumes from wherever the collection stopped, returns immediately when already complete, and never re-requests a loaded page. Use `rewindPages()` to re-query. |
+| `each()` | `Generator` | Complete the set, streamed one page at a time. Yields already-loaded items before paging on, so it neither skips nor repeats. |
 | `rewindPages()` | `static` | Back to unfetched, filters kept. |
 | `pageSize(int $size)` | `static` | |
 | `maxPages(?int $pages)` | `static` | Null removes the bound. |

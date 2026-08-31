@@ -147,7 +147,18 @@ abstract class AbstractCollection extends AbstractEntity implements \Iterator, \
      */
     public function fetchAll(): static
     {
-        $this->fetch();
+        // Already complete — either seeded from content that arrived inline, or
+        // walked to the end. Re-running would discard what is loaded and spend
+        // requests reproducing it. Call rewindPages() to deliberately re-query.
+        if ($this->fetched && !$this->hasMore) {
+            return $this;
+        }
+
+        // Partially loaded: continue from where the last fetch stopped rather
+        // than starting over.
+        if (!$this->fetched) {
+            $this->fetch();
+        }
 
         while ($this->hasMore && !$this->reachedPageLimit()) {
             $this->loadPage($this->cursor);
@@ -163,6 +174,18 @@ abstract class AbstractCollection extends AbstractEntity implements \Iterator, \
      */
     public function each(): \Generator
     {
+        // Yield anything already loaded before paging on. Without this, a
+        // collection seeded from an inline transcript would re-request content
+        // it already holds, and one that had fetch() called on it would resume
+        // from the *next* cursor and silently skip its first page.
+        if ($this->fetched) {
+            yield from $this->data;
+
+            if (!$this->hasMore) {
+                return;
+            }
+        }
+
         $cursor = $this->cursor;
         $pages = 0;
 

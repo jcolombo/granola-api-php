@@ -323,13 +323,11 @@ $index->put($noteId, [
     'summary' => $note->summary(),
     'attendees' => $note->attendeeEmails(),
     'occurred_at' => $note->created_at->format(DATE_ATOM),
-    'transcript' => $note->hasInlineTranscript()
-        ? $note->transcriptText()
-        : $note->transcript()->fetchAll()->toText(),
+    'transcript' => $note->transcript()->fetchAll()->toText(),
 ]);
 ```
 
-Asking for the transcript inline saves a request when it fits; the ternary covers the long meetings where Granola refuses and the SDK falls back to paging.
+`fetchAll()` leaves the transcript complete however it arrived: it returns immediately when the transcript came inline, and pages the rest when it did not — including after a `413` fallback. No branching, and no request wasted re-fetching content already in hand.
 
 ### Folder-scoped processing
 

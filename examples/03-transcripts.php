@@ -46,7 +46,9 @@ if ($shown === 0) {
 
 // ── Working with a loaded transcript ────────────────────────────────────
 
-$full = $note->hasInlineTranscript() ? $transcript : $note->transcript()->fetchAll();
+// fetchAll() completes the transcript whichever way it arrived: a no-op when it
+// came inline, paging the rest when it did not.
+$full = $transcript->fetchAll();
 
 echo "\nSpeakers: ", implode(', ', $full->speakerLabels()), "\n";
 echo 'Lines spoken by the note owner: ', count($full->fromMe()), ' of ', count($full), "\n";

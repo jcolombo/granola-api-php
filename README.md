@@ -188,7 +188,11 @@ foreach ($notes->each() as $note) {   // every page, one page resident
 }
 ```
 
-`fetchAll()` and `each()` are bounded by `maxPages` (1000 by default, `->maxPages(50)` to change, `->maxPages(null)` to remove).
+`fetchAll()` is the "give me the complete set, stitched together" call — no manual paging loop. It is safe to call at any point: it resumes from wherever the collection stopped, returns immediately when everything is already loaded, and never re-requests a page it holds. To deliberately re-query with different filters, reset first with `rewindPages()`.
+
+`each()` is the streaming equivalent, for sets large enough that holding them all is the wrong shape. It yields anything already loaded before paging on, so it too can be called on a partly-fetched collection without skipping or repeating items.
+
+Both are bounded by `maxPages` (1000 by default, `->maxPages(50)` to change, `->maxPages(null)` to remove). If the bound truncates a walk, `hasMore()` stays `true` and `cursor()` is non-null — so truncation is detectable and resumable, never silent.
 
 ### Resuming later
 
@@ -246,11 +250,19 @@ $note->hasInlineTranscript();     // true
 $note->transcript();              // no extra request — already loaded
 ```
 
-For long meetings Granola answers **413 `TRANSCRIPT_TOO_LARGE`** instead. The SDK handles it: the note is re-fetched without the transcript, `transcriptWasTooLarge()` becomes true, and `transcript()` pages from `/v1/notes/{id}/transcript` instead. Either way, this works:
+For long meetings Granola answers **413 `TRANSCRIPT_TOO_LARGE`** instead. The SDK handles it: the note is re-fetched without the transcript, `transcriptWasTooLarge()` becomes true, and `transcript()` pages from `/v1/notes/{id}/transcript` instead.
+
+You never have to branch on which happened. Both of these do the right thing either way:
 
 ```php
+// Complete transcript, stitched together and held in memory.
+$text = Note::find($id, true)->transcript()->fetchAll()->toText();
+
+// Same coverage, streamed one page at a time.
 foreach (Note::find($id, true)->transcript()->each() as $item) { ... }
 ```
+
+When the transcript arrived inline, both return what is already loaded and make **no** further request. When it did not, they page until the transcript is complete.
 
 Set `notes.autoFallbackLargeTranscript` to `false` to get a `TranscriptTooLargeException` and handle it yourself.
 

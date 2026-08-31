@@ -1,0 +1,30 @@
+{
+    "folders": [
+        {
+            "id": "fol_a74g2hvl98iUHG",
+            "object": "folder",
+            "name": "Product",
+            "parent_folder_id": null
+        },
+        {
+            "id": "fol_4y6LduVdwSKC27",
+            "object": "folder",
+            "name": "Top secret recipes",
+            "parent_folder_id": "fol_a74g2hvl98iUHG"
+        },
+        {
+            "id": "fol_9m2QpRsTuVwX10",
+            "object": "folder",
+            "name": "Greek",
+            "parent_folder_id": "fol_4y6LduVdwSKC27"
+        },
+        {
+            "id": "fol_5b8CdEfGhIjKl3",
+            "object": "folder",
+            "name": "Sales",
+            "parent_folder_id": null
+        }
+    ],
+    "hasMore": false,
+    "cursor": null
+}

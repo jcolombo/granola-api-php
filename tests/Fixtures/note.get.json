@@ -1,0 +1,35 @@
+{
+    "id": "not_1d3tmYTlCICgjy",
+    "object": "note",
+    "title": "Quarterly yoghurt budget review",
+    "owner": { "name": "Oat Benson", "email": "oat@granola.ai" },
+    "created_at": "2026-01-27T15:30:00Z",
+    "updated_at": "2026-01-27T16:45:00Z",
+    "web_url": "https://notes.granola.ai/d/f3e45e0f-24cc-480b-9a6c-8b1f5e3d7a2c",
+    "calendar_event": {
+        "event_title": "Quarterly yoghurt budget review",
+        "invitees": [
+            { "email": "raisin@granola.ai" },
+            { "email": "buyer@example.com" }
+        ],
+        "organiser": "oat@granola.ai",
+        "calendar_event_id": "2su99n6iiik37iiknmb5t4fkfh_20260127T153000Z",
+        "scheduled_start_time": "2026-01-27T15:30:00Z",
+        "scheduled_end_time": "2026-01-27T16:30:00Z"
+    },
+    "attendees": [
+        { "name": "Oat Benson", "email": "oat@granola.ai" },
+        { "name": "Raisin Patel", "email": "raisin@granola.ai" }
+    ],
+    "folder_membership": [
+        {
+            "id": "fol_4y6LduVdwSKC27",
+            "object": "folder",
+            "name": "Top secret recipes",
+            "parent_folder_id": "fol_a74g2hvl98iUHG"
+        }
+    ],
+    "summary_text": "The quarterly yoghurt budget review was a success.",
+    "summary_markdown": "## Quarterly Yoghurt Budget Review\n\n- Spent **$100,000**\n- Made **$150,000**",
+    "transcript": null
+}

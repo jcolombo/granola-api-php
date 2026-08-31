@@ -1,0 +1,138 @@
+{
+    "connection": {
+        "url": "https://public-api.granola.ai/",
+        "apiKey": null,
+        "verify": true,
+        "timeout": 30
+    },
+    "path": {
+        "cache": null,
+        "logs": null
+    },
+    "enabled": {
+        "cache": false,
+        "logging": false
+    },
+    "cache": {
+        "lifespan": 300
+    },
+    "rateLimit": {
+        "enabled": true,
+        "minDelayMs": 0,
+        "safetyBuffer": 1,
+        "maxRetries": 3,
+        "retryDelayMs": 1000,
+        "burstLimit": 25,
+        "burstWindowSeconds": 5,
+        "perMinute": 300
+    },
+    "pagination": {
+        "notesPageSize": 10,
+        "foldersPageSize": 10,
+        "auditPageSize": 10,
+        "transcriptPageSize": 50,
+        "maxPages": 1000
+    },
+    "notes": {
+        "autoFallbackLargeTranscript": true
+    },
+    "webhook": {
+        "signingSecret": null,
+        "toleranceSeconds": 300,
+        "requireHttps": true
+    },
+    "log": {
+        "connections": false,
+        "requests": true
+    },
+    "devMode": false,
+    "testing": {
+        "enabled": true,
+        "api_key": null,
+        "signing_secret": null,
+        "webhook_url": null,
+        "modes": {
+            "dry_run": false,
+            "verbose": false,
+            "stop_on_failure": false,
+            "interactive": true,
+            "read_only": true,
+            "list_limit": 5
+        },
+        "resources": {
+            "skip": [],
+            "only": []
+        },
+        "timeouts": {
+            "per_test": 30,
+            "per_group": 300,
+            "total": 1800
+        }
+    },
+    "error": {
+        "enabled": true,
+        "handlers": {
+            "notice": ["log"],
+            "warn": ["log"],
+            "fatal": ["log"]
+        },
+        "logFilename": "granola-errors.log",
+        "triggerPhpErrors": false,
+        "throwOnApiError": false
+    },
+    "classMap": {
+        "defaultCollection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\EntityCollection",
+        "entity": {
+            "note": {
+                "type": "resource",
+                "resource": "Jcolombo\\GranolaApiPhp\\Entity\\Resource\\Note",
+                "collectionKey": "notes"
+            },
+            "notes": {
+                "type": "collection",
+                "resourceKey": "note",
+                "collection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\NoteCollection"
+            },
+            "folder": {
+                "type": "resource",
+                "resource": "Jcolombo\\GranolaApiPhp\\Entity\\Resource\\Folder",
+                "collectionKey": "folders"
+            },
+            "folders": {
+                "type": "collection",
+                "resourceKey": "folder",
+                "collection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\FolderCollection"
+            },
+            "transcript_item": {
+                "type": "resource",
+                "resource": "Jcolombo\\GranolaApiPhp\\Entity\\Resource\\TranscriptItem",
+                "collectionKey": "transcript"
+            },
+            "transcript": {
+                "type": "collection",
+                "resourceKey": "transcript_item",
+                "collection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\TranscriptCollection"
+            },
+            "audit_event": {
+                "type": "resource",
+                "resource": "Jcolombo\\GranolaApiPhp\\Entity\\Resource\\AuditEvent",
+                "collectionKey": "audit_events"
+            },
+            "audit_events": {
+                "type": "collection",
+                "resourceKey": "audit_event",
+                "collection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\AuditEventCollection"
+            },
+            "webhook_endpoint": {
+                "type": "resource",
+                "resource": "Jcolombo\\GranolaApiPhp\\Entity\\Resource\\WebhookEndpoint",
+                "collectionKey": "webhook_endpoints"
+            },
+            "webhook_endpoints": {
+                "type": "collection",
+                "resourceKey": "webhook_endpoint",
+                "collection": "Jcolombo\\GranolaApiPhp\\Entity\\Collection\\WebhookEndpointCollection"
+            }
+        }
+    }
+}

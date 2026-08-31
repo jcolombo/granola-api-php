@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+# Granola PHP SDK — release script
+#
+# Usage:
+#   bin/release <version> [--push]
+#
+# Examples:
+#   bin/release 0.2.0            # tag locally
+#   bin/release 0.2.0 --push     # tag and push to origin
+#   bin/release 1.0.0-beta.1     # pre-release
+#
+# What it does:
+#   1. Validates the version format
+#   2. Refuses to run on a dirty working tree
+#   3. Refuses to reuse an existing tag
+#   4. Runs the unit suite
+#   5. Renames [Unreleased] in CHANGELOG.md to [version] with today's date
+#      and adds the comparison links
+#   6. Commits the changelog
+#   7. Creates an annotated v<version> tag
+#   8. Optionally pushes the commit and the tag
+#
+# Packagist picks the tag up from the GitHub webhook — there is nothing to
+# publish by hand.
+
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+VERSION="${1:-}"
+PUSH=false
+
+for arg in "${@:2}"; do
+    case "$arg" in
+        --push) PUSH=true ;;
+        *) echo -e "${RED}Unknown option: $arg${NC}"; exit 1 ;;
+    esac
+done
+
+if [[ -z "$VERSION" ]]; then
+    echo -e "${RED}Usage: bin/release <version> [--push]${NC}"
+    echo ""
+    echo "Examples:"
+    echo "  bin/release 0.2.0"
+    echo "  bin/release 1.0.0 --push"
+    exit 1
+fi
+
+# --- 1. Version format -------------------------------------------------------
+
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+    echo -e "${RED}Invalid version '$VERSION'. Expected semver, e.g. 0.2.0 or 1.0.0-beta.1${NC}"
+    exit 1
+fi
+
+TAG="v$VERSION"
+
+# --- 2. Clean tree -----------------------------------------------------------
+
+if [[ -n "$(git status --porcelain)" ]]; then
+    echo -e "${RED}Working tree is dirty. Commit or stash before releasing.${NC}"
+    git status --short
+    exit 1
+fi
+
+# --- 3. Tag is free ----------------------------------------------------------
+
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo -e "${RED}Tag $TAG already exists.${NC}"
+    exit 1
+fi
+
+# --- 4. Tests ----------------------------------------------------------------
+
+echo -e "${YELLOW}Running the unit suite...${NC}"
+if [[ -x vendor/bin/phpunit ]]; then
+    vendor/bin/phpunit --no-coverage
+else
+    echo -e "${RED}vendor/bin/phpunit not found. Run composer install first.${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Note: tests/validate (live API checks) is not run here. Run it yourself before tagging.${NC}"
+
+# --- 5. Changelog ------------------------------------------------------------
+
+if ! grep -q '^## \[Unreleased\]' CHANGELOG.md; then
+    echo -e "${RED}CHANGELOG.md has no [Unreleased] section.${NC}"
+    exit 1
+fi
+
+UNRELEASED_BODY="$(awk '/^## \[Unreleased\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md | tr -d '[:space:]')"
+if [[ -z "$UNRELEASED_BODY" ]]; then
+    echo -e "${YELLOW}Warning: [Unreleased] is empty — this release will have no notes.${NC}"
+    read -r -p "Continue? [y/N] " reply
+    [[ "$reply" =~ ^[Yy]$ ]] || exit 1
+fi
+
+TODAY="$(date +%Y-%m-%d)"
+PREVIOUS_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo '')"
+
+echo -e "${YELLOW}Updating CHANGELOG.md...${NC}"
+
+# Insert a fresh [Unreleased] above the newly dated section.
+perl -0pi -e "s/^## \[Unreleased\]/## [Unreleased]\n\n## [$VERSION] - $TODAY/m" CHANGELOG.md
+
+# Refresh the link references at the foot of the file.
+perl -0pi -e "s{^\[Unreleased\]: .*\$}{[Unreleased]: https://github.com/jcolombo/granola-api-php/compare/$TAG...HEAD}m" CHANGELOG.md
+
+if [[ -n "$PREVIOUS_TAG" ]]; then
+    LINK="[$VERSION]: https://github.com/jcolombo/granola-api-php/compare/$PREVIOUS_TAG...$TAG"
+else
+    LINK="[$VERSION]: https://github.com/jcolombo/granola-api-php/releases/tag/$TAG"
+fi
+
+if ! grep -qF "[$VERSION]:" CHANGELOG.md; then
+    perl -0pi -e "s{^(\[Unreleased\]: .*)\$}{\$1\n$LINK}m" CHANGELOG.md
+fi
+
+# --- 6/7. Commit and tag -----------------------------------------------------
+
+git add CHANGELOG.md
+git commit -m "chore(release): $VERSION"
+git tag -a "$TAG" -m "Release $VERSION"
+
+echo -e "${GREEN}Tagged $TAG${NC}"
+
+# --- 8. Push -----------------------------------------------------------------
+
+if [[ "$PUSH" == true ]]; then
+    echo -e "${YELLOW}Pushing to origin...${NC}"
+    git push origin HEAD
+    git push origin "$TAG"
+    echo -e "${GREEN}Pushed. Packagist will pick up $TAG from the GitHub webhook.${NC}"
+else
+    echo ""
+    echo "Not pushed. When ready:"
+    echo "  git push origin HEAD && git push origin $TAG"
+fi

@@ -1,0 +1,14 @@
+{
+    "notes": [
+        {
+            "id": "not_3g5voAVnEKEilA",
+            "object": "note",
+            "title": "Packaging vendor call",
+            "owner": { "name": null, "email": "ops@granola.ai" },
+            "created_at": "2026-01-29T11:15:00Z",
+            "updated_at": "2026-01-29T12:02:00Z"
+        }
+    ],
+    "hasMore": false,
+    "cursor": null
+}

@@ -1,0 +1,20 @@
+/vendor/
+/.phpunit.cache/
+/.phpunit.result.cache
+composer.phar
+
+# Local credential + config overrides — never commit
+granolaapi.config.json
+*.local.json
+.env
+.env.*
+
+# Runtime artifacts
+/logs/
+/cache/
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp

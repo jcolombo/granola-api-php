@@ -1,0 +1,44 @@
+{
+    "events": [
+        {
+            "id": "aud_7Kq2mXbT9vRp3L",
+            "object": "audit_event",
+            "action": "workspace.member_added",
+            "occurred_at": "2026-01-27T15:30:00.482Z",
+            "collected_at": "2026-01-27T15:30:04.109733Z",
+            "actor": {
+                "object": "user",
+                "id": "usr_3nQ8vLpZ2kR7dY",
+                "email": "oat@granola.ai"
+            },
+            "data": { "role": "member" },
+            "context": {
+                "ip_address": "203.0.113.42",
+                "user_agent": "Granola/7.400.0 (macOS 15.3)",
+                "client_version": "7.400.0"
+            }
+        },
+        {
+            "id": "aud_8Lr3nYcU0wSq4M",
+            "object": "audit_event",
+            "action": "workspace_automation.created",
+            "occurred_at": "2026-01-27T16:00:00.000Z",
+            "collected_at": "2026-01-27T16:00:01.220110Z",
+            "actor": { "object": "api_key", "id_suffix": "aB3dE7hK" },
+            "data": {},
+            "context": { "ip_address": null, "user_agent": null, "client_version": null }
+        },
+        {
+            "id": "aud_9Ms4oZdV1xTr5N",
+            "object": "audit_event",
+            "action": "note.recorded",
+            "occurred_at": "2026-01-27T17:10:00.000Z",
+            "collected_at": "2026-01-27T17:12:44.980011Z",
+            "actor": { "object": "system" },
+            "data": { "noteId": "not_1d3tmYTlCICgjy" },
+            "context": { "ip_address": null, "user_agent": null, "client_version": null }
+        }
+    ],
+    "hasMore": false,
+    "cursor": null
+}

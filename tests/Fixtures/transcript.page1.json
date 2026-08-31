@@ -1,0 +1,18 @@
+{
+    "transcript": [
+        {
+            "speaker": { "source": "microphone", "attribution": "me" },
+            "text": "Let's start with the numbers.",
+            "start_time": "2026-01-27T15:30:00Z",
+            "end_time": "2026-01-27T15:30:03Z"
+        },
+        {
+            "speaker": { "source": "speaker", "diarization_label": "Speaker A" },
+            "text": "Revenue is up eleven percent.",
+            "start_time": "2026-01-27T15:30:04Z",
+            "end_time": "2026-01-27T15:30:09Z"
+        }
+    ],
+    "hasMore": true,
+    "cursor": "eyJyb3dfb2Zmc2V0Ijo1MCwiaXRlbV9vZmZzZXQiOjB9"
+}

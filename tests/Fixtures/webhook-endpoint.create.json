@@ -1,0 +1,13 @@
+{
+    "id": "whe_2mKr8fQxLp7Ta3",
+    "object": "webhook_endpoint",
+    "url": "https://example.com/granola-webhooks",
+    "url_redacted": false,
+    "events": ["note.generated", "note.edited", "note.access_granted"],
+    "folder_ids": [],
+    "scopes": ["personal", "public"],
+    "created_by": { "name": "Oat Benson", "email": "oat@granola.ai" },
+    "enabled": true,
+    "created_at": "2026-01-27T15:30:00Z",
+    "signing_secret": "whsec_c2VjcmV0LWtleS1mb3ItZ3Jhbm9sYS10ZXN0cw=="
+}

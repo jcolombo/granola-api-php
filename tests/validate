@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Live end-to-end checks against the real Granola API.
+ *
+ *   tests/validate --help
+ *
+ * Needs no test framework — only the SDK and a working API key. See
+ * tests/Live/LiveRunner.php for what it checks and why.
+ */
+
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
+
+if (!file_exists($autoload)) {
+    fwrite(STDERR, "Run composer install first — vendor/autoload.php is missing.\n");
+    exit(1);
+}
+
+require $autoload;
+
+// Look for a local override beside the package, then in the working directory,
+// so credentials never have to live in the repository.
+\Jcolombo\GranolaApiPhp\Configuration::overload(dirname(__DIR__));
+\Jcolombo\GranolaApiPhp\Configuration::overload(getcwd() ?: '.');
+
+exit((new \Jcolombo\GranolaApiPhp\Tests\Live\LiveRunner($argv))->run());

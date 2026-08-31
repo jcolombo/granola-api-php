@@ -1,0 +1,22 @@
+{
+    "notes": [
+        {
+            "id": "not_1d3tmYTlCICgjy",
+            "object": "note",
+            "title": "Quarterly yoghurt budget review",
+            "owner": { "name": "Oat Benson", "email": "oat@granola.ai" },
+            "created_at": "2026-01-27T15:30:00Z",
+            "updated_at": "2026-01-27T16:45:00Z"
+        },
+        {
+            "id": "not_2f4unZUmDJDhkz",
+            "object": "note",
+            "title": "Cultures and starters sync",
+            "owner": { "name": "Raisin Patel", "email": "raisin@granola.ai" },
+            "created_at": "2026-01-28T09:00:00Z",
+            "updated_at": "2026-01-28T09:55:00Z"
+        }
+    ],
+    "hasMore": true,
+    "cursor": "eyJvZmZzZXQiOjJ9"
+}

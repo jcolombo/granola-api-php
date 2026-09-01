@@ -7,6 +7,7 @@ namespace Jcolombo\GranolaApiPhp\Entity;
 use Jcolombo\GranolaApiPhp\Configuration;
 use Jcolombo\GranolaApiPhp\Granola;
 use Jcolombo\GranolaApiPhp\Request;
+use Jcolombo\GranolaApiPhp\Utility\RequestResponse;
 
 /**
  * A cursor-paginated list of one resource type.
@@ -65,6 +66,9 @@ abstract class AbstractCollection extends AbstractEntity implements \Iterator, \
 
     protected int $pagesFetched = 0;
 
+    /** The raw response of the most recent page fetch (null before any fetch). */
+    protected ?RequestResponse $lastResponse = null;
+
     /**
      * @param class-string<AbstractResource> $resourceClass
      */
@@ -103,6 +107,26 @@ abstract class AbstractCollection extends AbstractEntity implements \Iterator, \
     {
         $this->cursor = $cursor;
         return $this;
+    }
+
+    /**
+     * The raw response of the most recent page fetch (null before any
+     * fetch). This is the only way to distinguish an empty list from a
+     * failed request — a non-2xx fetch yields an empty page, it does not
+     * throw.
+     */
+    public function lastResponse(): ?RequestResponse
+    {
+        return $this->lastResponse;
+    }
+
+    /**
+     * True when at least one page was fetched and the most recent fetch
+     * came back non-2xx (bad credentials, outage, rate-limit exhaustion).
+     */
+    public function lastFetchFailed(): bool
+    {
+        return $this->lastResponse !== null && !$this->lastResponse->success;
     }
 
     /**

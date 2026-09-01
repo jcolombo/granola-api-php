@@ -6,19 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
-### Fixed
-
-- `fetchAll()` no longer discards loaded content and re-requests it. It now returns immediately when the collection is already complete, and resumes from where a previous `fetch()` stopped instead of starting over. This mattered most for transcripts: `$note->transcript()->fetchAll()` on a transcript that arrived inline was throwing the seeded content away and paging it back from the API, defeating the point of `include=transcript`. `fetchAll()` is now idempotent.
-- `each()` no longer skips the first page when called on a collection that had `fetch()` called on it — it resumed from the *next* cursor, silently dropping the loaded page. It now yields already-loaded items before paging on, and makes no request for a transcript that arrived inline. A cursor set with `withCursor()` on a fresh collection is still honoured.
-
-### Changed
-
-- `fetchAll()` and `each()` are documented as the complete-content calls: whichever way a transcript arrived — inline, paged, or after a `413` fallback — one call returns all of it, with no branching by the caller. Removed the `hasInlineTranscript()` ternary from the integration guide and examples.
-- Test signing secrets are now assembled at runtime rather than written as literals. Standard Webhooks borrowed Stripe's `whsec_` prefix, so a literal `whsec_<base64>` in source trips GitHub secret scanning as a "Stripe Webhook Signing Secret" — a false positive that fired a real alert on this repository and would fire again on every fork. No credential was ever exposed: the flagged value decoded to the ASCII string `secret-key-for-granola-tests`. Test coverage is unchanged, including the prefix-stripping path.
-
 ## [0.1.0] - 2026-08-31
 
 Initial release. Covers every endpoint documented in Granola's public API.
+
+> **Verified against Granola's published OpenAPI document, not against a live account.** The test fixtures are transcribed from that document and the suite covers every internal behaviour, but no request in this release has been made against the real API. Run `tests/validate` with a real key before relying on it in production, and pin to `^0.1`.
 
 ### Added
 
@@ -37,8 +29,12 @@ Initial release. Covers every endpoint documented in Granola's public API.
 
 **Pagination**
 - Cursor-driven `fetch()`, `fetchNext()`, `fetchAll()` and a memory-constant `each()` generator
+- `fetchAll()` completes a collection whatever state it is in: it returns immediately when everything is already loaded, resumes from where a previous `fetch()` stopped rather than starting over, and never re-requests a page it holds. It is idempotent; `rewindPages()` is the explicit reset for re-querying.
+- `each()` yields already-loaded items before paging on, so it neither repeats nor skips — and makes no request at all for a transcript that arrived inline
+- Together these mean one call returns a complete transcript however it arrived — inline, paged, or after a `413` fallback — with no branching by the caller
+- Paging is driven by `hasMore`, never by counting results: Granola documents that a page may be short and still not be the last one
 - Public `cursor()` and `hasMore()` so a sync can stop after any page and resume later
-- `maxPages` bound on `fetchAll()` and `each()`
+- `maxPages` bound on `fetchAll()` and `each()`, with `hasMore()`/`cursor()` left set when it truncates, so the limit is detectable and resumable rather than silent
 - Typed accessors on every concrete collection
 
 **Webhook endpoints**

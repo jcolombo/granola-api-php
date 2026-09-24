@@ -153,5 +153,17 @@ final class CursorPaginationTest extends GranolaTestCase
         self::assertCount(0, $notes);
         self::assertFalse($notes->hasMore(), 'a failure must not loop forever');
         self::assertSame(400, $notes->lastResponse()?->responseCode);
+        self::assertTrue($notes->lastFetchFailed());
+    }
+
+    public function testLastFetchFailedIsFalseBeforeAnyFetchAndAfterASuccess(): void
+    {
+        $api = MockApi::make(MockApi::fixture('notes.list.page1'));
+
+        $notes = Note::list($api->granola);
+        self::assertFalse($notes->lastFetchFailed(), 'nothing fetched yet');
+
+        $notes->fetch();
+        self::assertFalse($notes->lastFetchFailed());
     }
 }

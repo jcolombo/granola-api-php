@@ -6,6 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+- `AbstractCollection::lastFetchFailed()` — true when the most recent page fetch came back non-2xx, so an empty collection can be told apart from a failed one without a null check on `succeeded()`
+
 ## [0.1.0] - 2026-08-31
 
 Initial release. Covers every endpoint documented in Granola's public API.

@@ -438,7 +438,8 @@ Every collection extends `AbstractCollection` and implements `Iterator`, `ArrayA
 | `flatten(string $property)` | `list<mixed>` | |
 | `toArray()` | `list<array>` | |
 | `count()` | `int` | Items **loaded**, not the server-side total. |
-| `lastResponse()` / `succeeded()` | | |
+| `lastResponse()` / `succeeded()` | | Inherited from `AbstractEntity`. |
+| `lastFetchFailed()` | `bool` | True only when a page was fetched and the most recent fetch was non-2xx. False before any fetch. |
 
 Concrete collections narrow the return types, so `Note::list()->first()` is a `Note`.
 
